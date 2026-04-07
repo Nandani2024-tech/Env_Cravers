@@ -8,7 +8,7 @@ from typing import Optional
 # Environment configuration
 API_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
 MODEL_NAME = os.getenv("MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct")
-HF_TOKEN = os.getenv("HF_TOKEN", "")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", os.getenv("HF_TOKEN", ""))
 ENV_BASE_URL = os.getenv("ENV_BASE_URL", "http://localhost:8000")
 
 TASKS = ["task_1", "task_2", "task_3"]
@@ -99,7 +99,10 @@ def run_task(task_id: str, client: OpenAI) -> tuple[float, list[float]]:
 
 def main():
     """Sequential execution of all environment benchmark tasks."""
-    client = OpenAI(base_url=API_BASE_URL, api_key=HF_TOKEN)
+    client = OpenAI(
+        base_url=os.getenv("API_BASE_URL", "https://router.huggingface.co/v1"),
+        api_key=os.getenv("OPENAI_API_KEY", os.getenv("HF_TOKEN", ""))
+    )
     for task_id in TASKS:
         run_task(task_id, client)
 

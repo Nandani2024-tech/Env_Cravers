@@ -35,6 +35,16 @@ The agent receives a structured `TriageObservation` containing:
 - **Positive Signals**: Correct classification (+0.6 to +1.0), optimal queue ordering (+0.1), correct resource allocation (+0.8), critical patient speed bonus (+0.1).
 - **Negative Signals**: Incorrect classification (0 to +0.4), invalid action (-0.2), clinical deterioration (-0.5 per patient).
 
+## API Credentials
+
+# If using OpenAI directly
+export OPENAI_API_KEY=sk-your-key-here
+
+# If using HuggingFace (current default)
+export OPENAI_API_KEY=hf_your-token-here
+export API_BASE_URL=https://router.huggingface.co/v1
+export MODEL_NAME=Qwen/Qwen2.5-72B-Instruct
+
 ## Setup Instructions
 1. Clone the repository and navigate to the project root.
 2. Create and activate a Python 3.11 virtual environment.

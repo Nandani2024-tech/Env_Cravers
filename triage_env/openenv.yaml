@@ -33,3 +33,8 @@ action_space:
   type: structured
   description: classify, reorder, assign, request_info, discharge
 reward_range: [-1.0, 1.0]
+inference:
+  credentials:
+    - OPENAI_API_KEY
+    - API_BASE_URL
+    - MODEL_NAME
