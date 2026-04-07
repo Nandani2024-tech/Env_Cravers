@@ -1,0 +1,35 @@
+name: clinical-triage-assistant
+version: "1.0.0"
+description: >
+  An OpenEnv RL environment simulating emergency room triage decisions.
+  Agents learn to classify patient urgency, manage waiting queues, and
+  allocate scarce medical resources using the 5-level ESI protocol.
+author: your-hf-username
+tags:
+  - healthcare
+  - triage
+  - resource-allocation
+  - medical-ai
+tasks:
+  - id: task_1
+    name: Single Patient Classification
+    difficulty: easy
+    description: Classify one patient's ESI urgency level from vitals and symptoms
+    max_steps: 30
+  - id: task_2
+    name: Queue Reprioritization
+    difficulty: medium
+    description: Manage and reprioritize 10 patients as conditions change dynamically
+    max_steps: 30
+  - id: task_3
+    name: Resource Allocation Under Constraints
+    difficulty: hard
+    description: Allocate 2 doctors, 3 beds, and 1 trauma bay across 15 patients optimally
+    max_steps: 30
+observation_space:
+  type: structured
+  description: Patient vitals, symptoms, queue state, resource occupancy, delta flags
+action_space:
+  type: structured
+  description: classify, reorder, assign, request_info, discharge
+reward_range: [-1.0, 1.0]
