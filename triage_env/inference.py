@@ -5,6 +5,10 @@ import httpx
 import re
 from openai import OpenAI
 from typing import Any, Optional
+from dotenv import load_dotenv
+
+# Load local environment variables from .env
+load_dotenv()
 
 # Environment configuration
 API_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
