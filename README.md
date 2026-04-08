@@ -203,14 +203,14 @@ docker run -d --name triage-env -p 8001:8000 \
   -e MODEL_NAME=Qwen/Qwen2.5-72B-Instruct \
   triage-env:latest
 
-curl http://localhost:8001/health
+curl https://auxid01-ec.hf.space/health
 ```
 
 ### Baseline Inference
 
 ```bash
 python scripts/launcher.py &
-OPENENV_HOST=http://localhost:8001 python inference.py
+OPENENV_HOST=https://auxid01-ec.hf.space python inference.py
 ```
 
 **Example Output:**
