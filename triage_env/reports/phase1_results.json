@@ -1,0 +1,47 @@
+[
+  {
+    "test": "all tasks exist",
+    "passed": true,
+    "details": "task_1, task_2, task_3 all initialize"
+  },
+  {
+    "test": "reset() returns valid observation",
+    "passed": true,
+    "details": "task_id=task_1, patients=1"
+  },
+  {
+    "test": "step() returns valid StepResult",
+    "passed": true,
+    "details": "reward=-0.2, done=False"
+  },
+  {
+    "test": "state() returns valid dict",
+    "passed": true,
+    "details": "keys=['task_id', 'current_step', 'patient_hidden_states', 'optimal_queue_order', 'resource_occupancy']"
+  },
+  {
+    "test": "reward range [-1.0, 1.0]",
+    "passed": true,
+    "details": "All 6 rewards in range. Min=-0.20, Max=-0.10"
+  },
+  {
+    "test": "episode termination works",
+    "passed": true,
+    "details": "Task 1 terminates after CLASSIFY and blocks further actions"
+  },
+  {
+    "test": "invalid action handling",
+    "passed": false,
+    "details": "Invalid patient ID: \u2713\n  Invalid ESI level: \u2713\n  Task ID mismatch: \u2717"
+  },
+  {
+    "test": "action spam resilience",
+    "passed": true,
+    "details": "Processed 10 REQUEST_INFO actions. Last reward=-0.2"
+  },
+  {
+    "test": "repeated reset()",
+    "passed": true,
+    "details": "Successfully reset 5 times"
+  }
+]

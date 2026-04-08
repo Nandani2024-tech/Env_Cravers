@@ -2,7 +2,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 from app.core.models.action import TriageAction
-from app.core.models.environment import EnvState, PatientHiddenState, StepResult
+from app.core.models.environment import EnvState, PatientHiddenState, Reward, StepResult
 from app.core.models.observation import TriageObservation, PatientObservation
 from app.core.validator import ActionValidator
 from app.engine.state.registry import StateRegistry
@@ -46,7 +46,7 @@ class BaseScenario(ABC):
         obs = self._build_current_observation()
         return StepResult(
             observation=obs, 
-            reward=-0.2, 
+            reward=Reward(value=-0.2),
             done=False, 
             info={
                 "error": reason,

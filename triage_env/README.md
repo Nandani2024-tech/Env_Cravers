@@ -33,7 +33,7 @@ The agent receives a structured `TriageObservation` containing:
 
 ## Reward Function
 - **Positive Signals**: Correct classification (+0.6 to +1.0), optimal queue ordering (+0.1), correct resource allocation (+0.8), critical patient speed bonus (+0.1).
-- **Negative Signals**: Incorrect classification (0 to +0.4), invalid action (-0.2), clinical deterioration (-0.5 per patient).
+- **Negative Signals**: Suboptimal resource allocation (-0.2), request_info cost (-0.1), invalid action (-0.2), clinical deterioration (-0.5 per patient).
 
 ## API Credentials
 

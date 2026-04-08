@@ -6,6 +6,7 @@ description: >
   allocate scarce medical resources using the 5-level ESI protocol.
 author: your-hf-username
 tags:
+  - openenv
   - healthcare
   - triage
   - resource-allocation

@@ -1,0 +1,1093 @@
+﻿PS
+Env cravers → team name
+📋 Hackathon Submission Draft
+Clinical Triage Assistant — OpenEnv Environment
+________________
+
+
+1. What We're Building
+An AI training and evaluation environment where agents learn to make emergency room triage decisions — the same decisions real triage nurses make every day under pressure.
+The agent sees patients arriving with symptoms, vitals, and medical history. It must decide who gets treated first, who can wait, and when resources are scarce — who gets the doctor and who gets the bed.
+This is not a toy problem. Every hospital in the world does this. Getting it wrong costs lives.
+________________
+
+
+2. Why This Problem
+Every emergency room in the world faces the same crisis — too many patients, not enough resources, decisions made in seconds.
+Currently triage is done by experienced nurses following protocols like the Manchester Triage System and ESI (Emergency Severity Index). These are well-documented, rule-based systems — which means:
+* We have ground truth to build graders from
+* The rules are deterministic and fair
+* The domain is universally understood
+* The stakes are obviously real
+An AI agent trained in this environment could:
+* Assist triage nurses in high-pressure situations
+* Help train medical students
+* Power simulation tools for hospital management
+* Be evaluated for deployment in resource-limited healthcare settings
+________________
+
+
+3. What the Hackathon Asked For vs What We're Delivering
+Requirement
+	What's Asked
+	What We Deliver
+	Real-world task
+	Must simulate a task humans actually do
+	Emergency room triage — done daily in every hospital
+	OpenEnv spec
+	step/reset/state + typed models + openenv.yaml
+	Full implementation with Pydantic models
+	3 tasks (easy→hard)
+	Difficulty progression with graders
+	Classify → Prioritize → Allocate
+	Reward function
+	Partial progress, not just binary
+	Per-patient scoring throughout episode
+	Baseline inference
+	OpenAI client, env variables, reproducible
+	Script runs all 3 tasks, logs scores
+	Docker + HF Space
+	Must deploy and respond
+	Containerized, deployed, validated
+	README
+	Full documentation
+	Environment, tasks, setup, scores
+	________________
+
+
+4. The Three Tasks
+Task 1 — Single Patient Classification (Easy)
+What the agent sees: One patient. Their age, symptoms, vitals (heart rate, blood pressure, temperature), and a brief description of their complaint.
+What the agent must do: Classify the patient into one of three urgency levels:
+* 🔴 Critical — needs immediate attention
+* 🟡 Moderate — can wait 30 minutes
+* 🟢 Low — can wait 2+ hours
+How it's graded: Compared against Manchester Triage System rules. Exact match = full score. Adjacent level = partial score. Opposite extreme = near zero.
+Why it's easy: One patient, one decision, clear rules.
+________________
+
+
+Task 2 — Queue Reprioritization (Medium)
+What the agent sees: A waiting room of 10 patients, each with their initial triage level. Midway through, new information arrives — vitals change, new symptoms emerge, a patient deteriorates.
+What the agent must do: Continuously reprioritize the queue as information updates. Decide who moves up, who stays, who can wait longer.
+How it's graded: Scored on how closely the final queue ordering matches the medically correct ordering. Partial credit for each correctly positioned patient.
+Why it's medium: Multiple patients, dynamic information, ordering matters not just classification.
+________________
+
+
+Task 3 — Resource Allocation Under Constraints (Hard)
+What the agent sees: 15 patients in various states. Available resources: 2 doctors, 3 beds, 1 trauma bay. Each resource has different capability — not every patient can go to every resource.
+What the agent must do: Assign patients to resources optimally. Decide who gets the trauma bay, who gets a doctor, who gets a bed, and who must wait. As time passes, patients' conditions change and the agent must re-allocate.
+How it's graded: Multi-factor score — correct resource matching, minimized wait time for critical patients, zero preventable deteriorations, efficient use of available resources.
+Why it's hard: Constrained optimization + time pressure + changing state + multiple competing priorities. Even frontier models struggle with this.
+________________
+
+
+5. Reward Function Design
+The reward is never binary. Every single step gives the agent a signal.
+What gets rewarded:
+* Correctly classifying urgency → positive reward proportional to confidence of match
+* Moving a deteriorating patient up the queue quickly → bonus
+* Efficiently using resources without leaving critical patients waiting → bonus
+* Completing the episode without any preventable deteriorations → completion bonus
+What gets penalized:
+* Classifying a critical patient as low urgency → heavy penalty
+* Assigning a patient to an inappropriate resource → penalty
+* Repeating the same action with no new information → penalty (prevents loops)
+* Taking no action while a critical patient waits → time-decay penalty
+The key design principle: A nurse who gets 8/10 patients right should score better than one who gets 5/10. The reward reflects real partial progress at every step.
+________________
+
+
+6. Environment Design (Non-Technical Overview)
+What the agent sees (Observation):
+* Patient details: age, gender, chief complaint, symptoms list
+* Vitals: heart rate, blood pressure, temperature, oxygen saturation
+* Current queue state: who is waiting, how long they've waited
+* Available resources: what's free, what's occupied
+* Time elapsed in episode
+What the agent can do (Action):
+* Assign a urgency level to a patient
+* Move a patient's position in the queue
+* Assign a patient to a specific resource
+* Request more information about a patient
+* Mark a patient as stable/discharged
+Episode boundaries:
+* Each episode = one ER shift scenario
+* Episode ends when all patients are classified/assigned OR maximum steps reached
+* Clean reset between episodes — fresh patient set, fresh resources
+(Technical schema and model definitions — to be added)
+________________
+
+
+7. Technical Stack
+Component
+	Technology
+	Environment framework
+	OpenEnv
+	Data models
+	Pydantic
+	API layer
+	FastAPI
+	Containerization
+	Docker
+	Deployment
+	Hugging Face Spaces
+	Inference client
+	OpenAI Python client
+	Patient data
+	Synthetically generated JSON
+	Triage ground truth
+	Manchester Triage System + ESI protocol rules
+	(Folder structure and schema design — to be added)
+________________
+
+
+8. Baseline Inference Script Plan
+The script will:
+1. Connect to an LLM via OpenAI client using environment variables
+2. Run Task 1 → log all steps → report score
+3. Run Task 2 → log all steps → report score
+4. Run Task 3 → log all steps → report score
+5. Output a final summary with all three scores
+All credentials read from:
+* API_BASE_URL — the LLM endpoint
+* MODEL_NAME — which model to use
+* HF_TOKEN — authentication key
+Output format strictly follows [START] → [STEP] → [END] as required.
+(Exact script — to be added)
+________________
+
+
+9. Evaluation Criteria Mapping
+Criteria
+	Weight
+	How We Score High
+	Real-world utility
+	30%
+	ER triage is done millions of times daily worldwide. Direct applicability to healthcare AI
+	Task & grader quality
+	25%
+	3 tasks with clear difficulty progression. Graders based on established medical protocols — deterministic and fair
+	Environment design
+	20%
+	Rich observation space, meaningful action space, dense reward signal, clean episode management
+	Code quality
+	15%
+	Full OpenEnv spec compliance, typed models, working Docker, deployed HF Space
+	Creativity & novelty
+	10%
+	Medical AI triage environment — novel domain for OpenEnv, immediately recognized as valuable
+	________________
+
+
+
+
+10. What Makes This Stand Out
+It fills a real gap. There is no ER triage environment in the OpenEnv ecosystem. Healthcare AI is one of the most discussed and needed application areas for agents right now.
+The graders are honest. Medical triage protocols are publicly documented, rule-based, and deterministic. Our graders aren't made up — they reflect how real hospitals actually make these decisions.
+The hard task is genuinely hard. Constrained resource allocation with dynamic patient states and time pressure is an open research problem. Even GPT-4 level models will struggle with Task 3, which is exactly what the judges want to see.
+It scales beyond the hackathon. The environment design naturally extends to ICU bed management, ambulance dispatch, mass casualty events — real problems that hospital systems would pay for.
+________________
+
+
+Code implementation, schema design, and technical architecture — next phase
+
+
+Research Checklist
+🔬 Complete Research Checklist
+________________
+
+
+A. Medical Domain Research
+A1. Triage Protocols & Scoring Systems
+* Manchester Triage System (MTS) — full ruleset
+* Emergency Severity Index (ESI) — 5 level system
+* START Triage (Simple Triage and Rapid Treatment)
+* CTAS (Canadian Triage and Acuity Scale)
+* How these protocols map to each other
+* Which protocol is most deterministic and rule-based (for grader building)
+A2. Patient Vitals & Their Ranges
+* Heart rate — normal vs abnormal ranges
+* Blood pressure — systolic/diastolic thresholds
+* Temperature — fever thresholds
+* Oxygen saturation (SpO2) — critical thresholds
+* Respiratory rate — normal vs concerning
+* Glasgow Coma Scale (GCS) — consciousness scoring
+* How vitals combine to indicate severity
+A3. Chief Complaints & Symptom Mapping
+* Most common ER chief complaints
+* Which symptoms map to which urgency level
+* Red flag symptoms (always critical)
+* Symptom combinations that escalate urgency
+* How age changes urgency (pediatric vs elderly)
+* How time-since-onset affects urgency
+A4. Patient Deterioration Patterns
+* How quickly conditions deteriorate without treatment
+* Which conditions deteriorate fastest
+* Vital sign changes that indicate deterioration
+* Clinical deterioration scoring (NEWS2 score)
+* What triggers a re-triage
+A5. ER Resource Types & Capabilities
+* What a trauma bay is and what cases go there
+* Difference between a doctor vs nurse vs specialist
+* What procedures require which resources
+* Bed types — monitored vs general vs isolation
+* Resource handoff — when a patient moves from one resource to another
+* Average treatment time per urgency level
+A6. Real ER Workflow
+* How a patient enters the ER
+* What happens between arrival and triage
+* How queue management works in real ERs
+* How resource conflicts are resolved
+* What discharge looks like
+* What a "shift" looks like in time terms
+________________
+
+
+B. Synthetic Data Research
+B1. Medical Datasets for Reference
+* MIMIC-III / MIMIC-IV — real ICU data (structure reference)
+* eICU Collaborative Research Dataset
+* PhysioNet datasets
+* What fields these datasets contain
+* How they structure patient records
+B2. Synthetic Patient Generation
+* How to generate realistic age distributions for ER
+* How to generate correlated vitals (sick patients have multiple bad vitals)
+* How to generate realistic symptom combinations
+* How to avoid unrealistic combinations (e.g. fever + hypothermia)
+* Tools: Faker, Synthea (synthetic patient generator)
+* Synthea specifically — what it generates and how to use it
+B3. Scenario Design
+* What makes a "scenario" for Task 1 vs Task 2 vs Task 3
+* How to generate edge cases (borderline patients)
+* How to generate mass casualty scenarios for Task 3
+* Seeding scenarios for reproducibility
+________________
+
+
+C. OpenEnv Framework Research
+C1. OpenEnv Core
+* OpenEnv GitHub repository — full read
+* OpenEnv spec documentation
+* openenv-core pip package — what it installs
+* openenv validate — what exactly it checks
+* openenv.yaml — every field and what it means
+* Existing OpenEnv environments — how they're structured
+C2. OpenEnv Interface
+* Exact method signatures for step/reset/state
+* What StepResult must contain
+* How episodes are defined in OpenEnv
+* How tasks are registered in OpenEnv
+* How graders are registered and called
+* How openenv validate tests your environment
+C3. Example Environments
+* Read at least 2-3 existing OpenEnv environments fully
+* How they structure their Pydantic models
+* How they handle episode boundaries
+* How their graders work
+* How their reward functions are shaped
+________________
+
+
+D. Pydantic Research
+D1. Pydantic v2 Basics
+* BaseModel definition
+* Field types and type hints
+* Field validators
+* Optional fields
+* Nested models
+* Enum types in Pydantic
+* Model serialization (dict, JSON)
+D2. Pydantic in API Context
+* How Pydantic integrates with FastAPI
+* Request/response model patterns
+* Validation errors and how to handle them
+________________
+
+
+E. FastAPI Research
+E1. FastAPI Basics
+* Defining POST endpoints
+* Request body with Pydantic models
+* Response models
+* Async endpoints
+* App startup and shutdown events
+E2. FastAPI for OpenEnv
+* How OpenEnv expects HTTP endpoints to behave
+* Endpoint naming conventions
+* How state is maintained between requests
+* Session management in FastAPI
+* Running FastAPI with uvicorn
+________________
+
+
+F. Docker Research
+F1. Dockerfile Basics
+* FROM instruction — base image selection
+* WORKDIR, COPY, RUN, CMD instructions
+* Python base images (python:3.11-slim)
+* Installing pip packages in Docker
+* Exposing ports
+* Environment variables in Docker
+F2. Docker for This Project
+* How to containerize a FastAPI app
+* How OpenEnv expects the container to run
+* Port mapping
+* Health check endpoints
+* Docker build flags and tagging
+* Testing docker build locally
+F3. Docker Compose (if needed)
+* When to use docker-compose vs plain Docker
+* Service definitions
+* Environment variable passing
+________________
+
+
+G. Hugging Face Spaces Research
+G1. HF Spaces Basics
+* What HF Spaces is
+* Docker Spaces specifically
+* How to create a Docker Space
+* Space configuration file (README.md frontmatter)
+* How HF builds and deploys your Docker image
+* Space hardware tiers (CPU basic is free)
+G2. HF Spaces for OpenEnv
+* How OpenEnv pings your Space URL
+* What the /reset endpoint must return
+* Environment variables in HF Spaces (secrets)
+* Space URL format
+* How to check Space logs
+* Common deployment failures and fixes
+G3. HF Token & Authentication
+* How to generate HF token
+* Token permissions needed
+* Passing token as environment variable
+* Using token in OpenAI client
+________________
+
+
+H. OpenAI Client Research
+H1. OpenAI Python Client
+* Installation
+* Client initialization with custom base_url
+* chat.completions.create — all parameters
+* Message format (system, user, assistant roles)
+* Temperature and its effect on reproducibility
+* max_tokens parameter
+* Streaming vs non-streaming
+H2. Using OpenAI Client with HuggingFace
+* HuggingFace Inference API compatibility with OpenAI client
+* Which HF models support OpenAI-compatible endpoint
+* Router URL format for HF
+* Authentication with HF_TOKEN
+* Rate limits and handling them
+H3. Model Selection for Baseline
+* Which models are available on HF router
+* Which models are good at structured decision making
+* Cost vs quality tradeoff for baseline
+* How to make inference deterministic (temperature=0)
+________________
+
+
+I. Reward Function Research
+I1. Reward Shaping Theory
+* What dense vs sparse rewards mean
+* Potential-based reward shaping
+* How to normalize rewards to 0.0-1.0
+* Time-decay penalties
+* How to penalize without destabilizing learning
+I2. Grader Design
+* Deterministic grading — what makes a grader deterministic
+* Partial credit scoring systems
+* How to handle edge cases in graders
+* How to make graders reproducible with seeds
+* Score aggregation across multiple steps
+________________
+
+
+J. Project Structure Research
+J1. OpenEnv Project Layout
+* Required files and where they go
+* inference.py placement (root directory — mandatory)
+* openenv.yaml placement
+* Dockerfile placement
+* How OpenEnv discovers your tasks
+J2. Python Project Best Practices
+* requirements.txt vs pyproject.toml
+* Environment variable loading (.env files, python-dotenv)
+* Async Python patterns (asyncio, async/await)
+* Logging setup
+* Error handling patterns
+________________
+
+
+K. Validation & Testing Research
+K1. openenv validate
+* What the validate command checks exactly
+* How to run it locally
+* Common validation failures
+* How to fix each type of failure
+K2. Pre-submission Script
+* The validate-submission.sh script — read it fully
+* What each of the 3 steps checks
+* How to make your HF Space respond to /reset with 200
+* How to ensure docker build passes cleanly
+________________
+
+
+Internal Connection Map
+Medical Protocols (A)
+        ↓
+Synthetic Data (B) ← Synthea/MIMIC structure
+        ↓
+Pydantic Models (D) ← shapes Observation/Action/Reward
+        ↓
+OpenEnv Interface (C) ← step/reset/state use those models
+        ↓
+FastAPI Endpoints (E) ← exposes OpenEnv interface over HTTP
+        ↓
+Reward + Graders (I) ← built on medical protocol rules from (A)
+        ↓
+Docker (F) ← packages FastAPI app
+        ↓
+HF Spaces (G) ← hosts Docker container
+        ↓
+OpenAI Client (H) ← inference.py talks to LLM
+        ↓
+Project Structure (J) ← holds everything together
+        ↓
+Validation (K) ← confirms everything works end to end
+
+
+________________
+
+
+folder_structure
+clinical_triage/
+└── triage_env/
+    ├── app/
+    │   ├── __init__.py           # Marks app as a Python package.
+    │   ├── api/
+    │   │   ├── __init__.py       # Marks api as a Python package.
+    │   │   ├── main.py           # Initializes FastAPI app and middleware.
+    │   │   └── routes.py         # Maps HTTP endpoints to environment methods.
+    │   ├── core/
+    │   │   ├── __init__.py       # Marks core as a Python package.
+    │   │   ├── constants/
+    │   │   │   ├── __init__.py   # Marks constants as a Python package.
+    │   │   │   ├── protocols.py  # Clinical rulebooks for ESI and Manchester.
+    │   │   │   ├── resources.py  # Hardware specs and processing time limits.
+    │   │   │   └── thresholds.py # Numerical safety and deterioration limits.
+    │   │   ├── models/
+    │   │   │   ├── __init__.py   # Marks models as a Python package.
+    │   │   │   ├── action.py     # Pydantic schemas for agent decisions.
+    │   │   │   ├── observation.py# Pydantic schemas for agent perceptions.
+    │   │   │   └── environment.py# Schemas for Reward, StepResult, and State.
+    │   │   ├── config.py         # Validates and loads environment variables.
+    │   │   ├── seeds.py          # Central registry for reproducible task seeds.
+    │   │   └── validator.py      # Logic for rejecting illegal or impossible actions.
+    │   ├── engine/
+    │   │   ├── __init__.py       # Marks engine as a Python package.
+    │   │   ├── vitals/
+    │   │   │   ├── __init__.py   # Marks vitals as a Python package.
+    │   │   │   ├── calculator.py # Mathematical models for vital sign shifts.
+    │   │   │   └── status_manager.py # Tracks deterioration flags and counters.
+    │   │   ├── resources/
+    │   │   │   ├── __init__.py   # Marks resources as a Python package.
+    │   │   │   ├── allocator.py  # Handles patient-to-resource locking logic.
+    │   │   │   └── release_engine.py # Manages auto-vacation countdowns.
+    │   │   ├── queue/
+    │   │   │   ├── __init__.py   # Marks queue as a Python package.
+    │   │   │   └── sorter.py     # Logic for waitlist ordering and tracking.
+    │   │   ├── info/
+    │   │   │   ├── __init__.py   # Marks info as a Python package.
+    │   │   │   └── history_unlocker.py # Handles the cost and logic of history retrieval.
+    │   │   ├── state/
+    │   │   │   ├── __init__.py   # Marks state as a Python package.
+    │   │   │   ├── base.py       # Abstract base for the Teacher View.
+    │   │   │   └── registry.py   # Task-aware storage for hidden variables.
+    │   │   ├── reward_engine.py  # Aggregates point-in-time reward signals.
+    │   │   └── termination.py    # Monitors safety triggers and episode endings.
+    │   ├── tasks/
+    │   │   ├── __init__.py       # Marks tasks as a Python package.
+    │   │   ├── task_1/
+    │   │   │   ├── __init__.py   # Marks task_1 as a Python package.
+    │   │   │   └── scenario.py   # Orchestrator for Scenario 1: Classification.
+    │   │   ├── task_2/
+    │   │   │   ├── __init__.py   # Marks task_2 as a Python package.
+    │   │   │   └── scenario.py   # Orchestrator for Scenario 2: Queueing.
+    │   │   └── task_3/
+    │   │       ├── __init__.py   # Marks task_3 as a Python package.
+    │   │       └── scenario.py   # Orchestrator for Scenario 3: Allocation.
+    │   ├── graders/
+    │   │   ├── __init__.py       # Marks graders as a Python package.
+    │   │   ├── task_1_grader.py  # Scores classification accuracy.
+    │   │   ├── task_2_grader.py  # Scores queue priority ordering.
+    │   │   └── task_3/
+    │   │       ├── __init__.py   # Marks task_3 grader as a Python package.
+    │   │       ├── resource_scorer.py # Scores resource matching accuracy.
+    │   │       ├── time_scorer.py     # Scores wait-time efficiency.
+    │   │       └── safety_scorer.py   # Penalties for patient outcomes.
+    │   ├── data/
+    │   │   ├── __init__.py       # Marks data as a Python package.
+    │   │   ├── patient_factory.py# Core generator for base vital profiles.
+    │   │   └── scenario_builder.py# Compiles cohorts for specific tasks.
+    │   ├── utils/
+    │   │   ├── __init__.py       # Marks utils as a Python package.
+    │   │   ├── logging.py        # Configures structured diagnostics.
+    │   │   └── formatters.py     # Standardizes clinical data strings.
+    │   └── environment.py        # Final OpenEnv wrapper and stateful core.
+    ├── tests/
+    │   ├── __init__.py           # Marks tests as a Python package.
+    │   ├── unit/
+    │   │   └── __init__.py       # Marks unit tests as a Python package.
+    │   └── integration/
+    │       └── __init__.py       # Marks integration tests as a Python package.
+    ├── scripts/
+    │   ├── validate.sh           # Shell script for openenv validation.
+    │   └── launcher.py           # Local uvicorn server bootstrapper.
+    ├── openenv.yaml              # Environment and task metadata file.
+    ├── inference.py              # LLM evaluation script.
+    ├── Dockerfile                # Deployment container definition.
+    ├── requirements.txt          # Pinned dependency list.
+    ├── README.md                 # Project and medical documentation.
+    ├── .env.example              # Template for required environment variables.
+    └── .dockerignore             # Exclusions for container builds.
+
+
+
+
+
+
+
+
+
+
+Dependency Flow
+1. Level 0 (Foundation): config.py, seeds.py, constants/*.py. These have no internal dependencies and define the world rules.
+2. Level 1 (Data & Models): models/*.py, data/patient_factory.py. These consume Level 0 to define the data structures.
+3. Level 2 (Atomic Engines): vitals/, resources/, info/, queue/, data/scenario_builder.py. These consume Level 1 to provide functional logic (e.g., patient deterioration, info unlocking).
+4. Level 3 (Management Layer): state/, validator.py, termination.py. These monitor the atomic engines and enforce simulation boundaries.
+5. Level 4 (Task & Reward): tasks/, reward_engine.py, graders/. These orchestrate the management layer into specific scenarios and calculate performance.
+6. Level 5 (Interface): environment.py (OpenEnv). This consumes everything to provide a unified reset/step/state interface.
+7. Level 6 (API): api/. This wraps the OpenEnv interface in a FastAPI server.
+8. Level 7 (External): inference.py, Dockerfile. These interact with the running API or build the system.
+
+
+Improvements
+🚀 One More Thing (This Is Very Important)
+There is one hidden design issue Antigravity didn't notice.
+Your current reward system is not extensible for new tasks.
+Right now every scenario manually defines reward logic.
+But professional RL environments use something called:
+RewardComponent System
+Example:
+ClassificationReward
+DeteriorationPenalty
+TimePressureBonus
+InvalidActionPenalty
+Each as a separate module.
+This makes environments plug-and-play scalable.
+And implementing it would take only ~30 lines of code.
+
+
+2. Add scenarios → bimarii aaya bhidh badh gaya 
+To add new Tasks
+How New Tasks Are Added
+You asked:
+how can i add a new situation
+This is the correct place.
+Step 1
+Create new folder:
+app/tasks/task_4/
+________________
+
+
+Step 2
+Add:
+scenario.py
+Defines:
+step()
+reset()
+task logic
+________________
+
+
+Step 3
+Add grader:
+app/graders/task_4_grader.py
+________________
+
+
+Step 4
+Register task in:
+environment.py
+Example:
+TASK_REGISTRY = {
+ "task_1": Task1Scenario,
+ "task_2": Task2Scenario
+}
+Add:
+"task_4": Task4Scenario
+________________
+
+
+Flow of system
+The real flow is:
+LLM (agent)
+    ↓
+inference.py
+    ↓
+API calls
+    ↓
+Environment (FastAPI backend)
+    ↓
+Scenario / Task logic
+    ↓
+Reward + Score
+So the LLM never directly talks to the environment.
+Instead:
+LLM
+↓
+inference.py  (the agent runner)
+↓
+/reset
+/step
+/score
+↓
+Environment
+
+
+
+
+
+
+LLM (agent)
+     ↓
+inference.py  ← The orchestrator
+     ↓
+POST /reset → API layer (routes.py)
+     ↓
+environment.py  → Holds the current scenario
+     ↓
+scenario.py  → Task-specific logic
+     ↓
+reward_engine.py → Computes step reward
+     ↓
+graders/*.py → Computes final score
+
+
+Audit
+You are acting as a **senior RL systems auditor and OpenEnv validator**.
+
+
+Your task is to perform a **deep adversarial evaluation of the Clinical Triage Assistant OpenEnv environment**.
+
+
+This project is being submitted to a hackathon where environments must comply with the **OpenEnv specification** and will be judged on:
+
+
+• Real-world utility
+• Task & grader quality
+• Environment design
+• Code quality & spec compliance
+• Creativity & novelty
+
+
+The environment implements **emergency room triage decision-making** with 3 tasks:
+
+
+Task 1 — Single Patient Classification
+Task 2 — Queue Reprioritization
+Task 3 — Resource Allocation Under Constraints
+
+
+Your job is to perform a **full internal validation and robustness audit**.
+
+
+Do NOT assume anything is correct.
+
+
+Your job is to prove that:
+
+
+1. The environment logic is real (not hardcoded)
+2. Rewards are generated from actual environment state transitions
+3. Graders produce deterministic reproducible scores
+4. The environment cannot be exploited by trivial policies
+5. The baseline inference pipeline works correctly
+6. The OpenEnv spec is correctly implemented
+7. The evaluation criteria of the hackathon are satisfied
+
+
+You must implement a **test harness** that performs the following.
+
+
+---
+
+
+PHASE 1 — STRUCTURAL VALIDATION
+
+
+Verify:
+
+
+• step(action) returns observation, reward, done, info
+• reset() resets environment state
+• state() returns correct internal state
+• reward range is always between -1 and +1
+• episode termination works correctly
+
+
+Create automated tests for:
+
+
+• invalid actions
+• repeated actions
+• action spam
+• out-of-order resource assignment
+• impossible triage decisions
+
+
+Output report:
+
+
+reports/system_integrity.md
+
+
+---
+
+
+PHASE 2 — REWARD FUNCTION AUDIT
+
+
+Test whether rewards are truly dynamic.
+
+
+Run scenarios:
+
+
+1. Perfect triage decisions
+2. Random actions
+3. Always-low urgency classification
+4. Always-critical classification
+5. No-op strategy
+
+
+Compute:
+
+
+• average reward
+• reward variance
+• episode completion rate
+
+
+Verify:
+
+
+Good policies > Bad policies
+
+
+Output report:
+
+
+reports/reward_validation.md
+
+
+---
+
+
+PHASE 3 — GRADER VALIDATION
+
+
+Test the graders for all tasks.
+
+
+Check:
+
+
+• deterministic scoring
+• score range always in [0.0, 1.0]
+• reproducibility across runs
+• meaningful score differences between policies
+
+
+Run each grader:
+
+
+10 times with same trajectory
+10 times with different trajectories
+
+
+Output report:
+
+
+reports/grader_analysis.md
+
+
+---
+
+
+PHASE 4 — EXPLOIT DETECTION
+
+
+Test if agents can exploit the environment.
+
+
+Attempt policies:
+
+
+• infinite REQUEST_INFO loop
+• repeating same action
+• assigning all patients to trauma bay
+• ignoring critical patients
+• random resource allocation
+
+
+Check if these produce unexpectedly high rewards.
+
+
+Output report:
+
+
+reports/exploit_analysis.md
+
+
+---
+
+
+PHASE 5 — BASELINE INFERENCE TEST
+
+
+Run the provided inference.py script with a real LLM.
+
+
+Perform:
+
+
+3 full runs of all tasks.
+
+
+Log:
+
+
+• steps
+• rewards
+• final scores
+• success flags
+
+
+Generate summary statistics:
+
+
+mean score
+std deviation
+min score
+max score
+
+
+Output report:
+
+
+reports/inference_runs.md
+
+
+---
+
+
+PHASE 6 — JUDGING CRITERIA ESTIMATION
+
+
+Based on evaluation outputs estimate the hackathon score.
+
+
+Score categories:
+
+
+Real-world utility (30)
+Task & grader quality (25)
+Environment design (20)
+Code quality (15)
+Creativity (10)
+
+
+Provide:
+
+
+estimated score breakdown
+weakness analysis
+recommendations for improvement
+
+
+Output report:
+
+
+reports/hackathon_score_estimate.md
+
+
+---
+
+
+PHASE 7 — ENVIRONMENT STRESS TEST
+
+
+Simulate 100 episodes with:
+
+
+random policy
+heuristic policy
+LLM policy
+
+
+Measure:
+
+
+• runtime
+• memory usage
+• average reward
+• stability
+• crashes
+
+
+Verify system fits constraints:
+
+
+vCPU = 2
+RAM = 8GB
+runtime < 20 minutes
+
+
+Output report:
+
+
+reports/stress_test.md
+
+
+---
+
+
+PHASE 8 — LOG VERIFICATION
+
+
+Ensure inference logs are not hardcoded.
+
+
+Check that logs:
+
+
+• correspond to real environment outputs
+• contain real rewards
+• contain correct step numbers
+
+
+Ensure logs follow EXACT format:
+
+
+[START]
+[STEP]
+[END]
+
+
+Output report:
+
+
+reports/log_validation.md
+
+
+---
+
+
+PHASE 9 — FINAL AUDIT SUMMARY
+
+
+Create a final report:
+
+
+reports/final_audit.md
+
+
+Include:
+
+
+• pass/fail checklist
+• detected vulnerabilities
+• scoring risk
+• recommended fixes
+• confidence of passing round 1
+
+
+---
+
+
+OUTPUT FORMAT
+
+
+Create a folder:
+
+
+reports/
+
+
+Generate the following markdown files:
+
+
+system_integrity.md
+reward_validation.md
+grader_analysis.md
+exploit_analysis.md
+inference_runs.md
+hackathon_score_estimate.md
+stress_test.md
+log_validation.md
+final_audit.md
+
+
+Each report must include:
+
+
+• methodology
+• experiment results
+• interpretation
+• recommendations
+
+
+---
+
+
+IMPORTANT RULES
+
+
+Never fabricate results.
+
+
+If a test requires manual execution by the developer, clearly state:
+
+
+"MANUAL RUN REQUIRED"
+
+
+and print the exact terminal command to run.
+
+
+---
+
+
+GOAL
+
+
+By the end of this audit we must know:
+
+
+• whether the environment is legitimate
+• how well LLMs perform on it
+• how the hackathon judges will score it
+• what improvements would maximize the chance of passing Round 1
+
+
+Start implementing the testing harness and report generation now.
+RL_realWorld
+OpenAI Gym / Gymnasium
+DeepMind Control Suite
+Arcade Learning Environment (ALE)

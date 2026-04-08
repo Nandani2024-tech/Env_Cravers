@@ -2,18 +2,150 @@
 import os
 import json
 import httpx
+import re
 from openai import OpenAI
-from typing import Optional
+from typing import Any, Optional
 
 # Environment configuration
 API_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
 MODEL_NAME = os.getenv("MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", os.getenv("HF_TOKEN", ""))
-ENV_BASE_URL = os.getenv("ENV_BASE_URL", "http://localhost:8000")
+ENV_BASE_URL = os.getenv("ENV_BASE_URL", os.getenv("OPENENV_HOST", "http://localhost:8000"))
 
 TASKS = ["task_1", "task_2", "task_3"]
 MAX_STEPS = 30
 TEMPERATURE = 0.0
+
+
+def _extract_action_json(raw: str) -> dict[str, Any]:
+    """Best-effort extraction of a JSON object from model output."""
+    text = (raw or "").strip()
+    if not text:
+        raise ValueError("Empty model response")
+
+    candidates: list[str] = [text]
+
+    fenced = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, flags=re.DOTALL | re.IGNORECASE)
+    if fenced:
+        candidates.append(fenced.group(1).strip())
+
+    inline = re.search(r"\{.*\}", text, flags=re.DOTALL)
+    if inline:
+        candidates.append(inline.group(0).strip())
+
+    for candidate in candidates:
+        try:
+            parsed = json.loads(candidate)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(parsed, dict):
+            return parsed
+
+    raise ValueError("Could not parse JSON action from model response")
+
+
+def _estimate_esi(patient: dict[str, Any]) -> int:
+    """Simple vitals-driven ESI estimate for robust fallback decisions."""
+    vitals = patient.get("vitals") or {}
+    spo2 = int(vitals.get("spo2", 95))
+    hr = int(vitals.get("heart_rate", 90))
+    sbp = int(vitals.get("systolic_bp", 110))
+    rr = int(vitals.get("respiratory_rate", 16))
+    gcs = int(vitals.get("gcs", 15))
+    temp = float(vitals.get("temperature", 37.0))
+
+    if spo2 < 70 or gcs <= 8 or sbp < 80:
+        return 1
+    if spo2 < 90 or hr > 150 or hr < 40 or sbp < 90 or rr > 28:
+        return 2
+    if hr > 110 or rr > 22 or temp >= 38.5:
+        return 3
+    very_stable = (
+        spo2 >= 97
+        and 60 <= hr <= 95
+        and 100 <= sbp <= 140
+        and 12 <= rr <= 18
+        and temp <= 37.5
+        and gcs == 15
+    )
+    if very_stable:
+        return 5
+    return 4
+
+
+def _pick_first_waiting_patient(observation: dict[str, Any]) -> dict[str, Any]:
+    patients = observation.get("patients") or []
+    if not patients:
+        return {"patient_id": "unknown"}
+
+    patient_by_id = {p.get("patient_id"): p for p in patients}
+    queue = observation.get("queue_order") or []
+    for pid in queue:
+        patient = patient_by_id.get(pid)
+        if patient:
+            return patient
+    return patients[0]
+
+
+def _fallback_action(observation: dict[str, Any], task_id: str) -> dict[str, Any]:
+    """
+    Deterministic fallback when model output is unavailable/invalid.
+    Designed to avoid infinite request_info loops and keep actions task-valid.
+    """
+    patient = _pick_first_waiting_patient(observation)
+    patient_id = patient.get("patient_id", "unknown")
+    queue = observation.get("queue_order") or []
+
+    if task_id in ("task_1", "task_2"):
+        return {
+            "task_id": task_id,
+            "action_type": "classify",
+            "patient_id": patient_id,
+            "value": _estimate_esi(patient),
+        }
+
+    # task_3 fallback: try feasible assignment first
+    resources = observation.get("resources") or []
+    free_resources = {r.get("resource_id") for r in resources if not r.get("is_occupied", False)}
+    doctors_free = ("doctor_1" in free_resources) or ("doctor_2" in free_resources)
+    patient_by_id = {p.get("patient_id"): p for p in observation.get("patients") or []}
+
+    def preferred_locations(esi: int) -> list[str]:
+        if esi == 1:
+            return ["trauma_bay"]
+        if esi == 2:
+            return ["trauma_bay", "bed_1", "bed_2"]
+        if esi == 3:
+            return ["bed_1", "bed_2", "bed_3"]
+        if esi == 4:
+            return ["bed_3"]
+        return ["discharge_area"]
+
+    waiting = [patient_by_id[pid] for pid in queue if pid in patient_by_id]
+    waiting.sort(key=_estimate_esi)
+
+    for candidate in waiting:
+        esi = _estimate_esi(candidate)
+        needs_doctor = esi <= 3
+        if needs_doctor and not doctors_free:
+            continue
+        for rid in preferred_locations(esi):
+            if rid in free_resources:
+                return {
+                    "task_id": task_id,
+                    "action_type": "assign",
+                    "patient_id": candidate.get("patient_id", patient_id),
+                    "value": rid,
+                }
+
+    # If no feasible assignment currently, perform a valid queue action.
+    target_id = queue[0] if queue else patient_id
+    return {
+        "task_id": task_id,
+        "action_type": "reorder",
+        "patient_id": target_id,
+        "value": max(1, len(queue)),
+    }
 
 def log_start(task: str, model: str):
     """Prints episode commencement log in standardized format."""
@@ -60,11 +192,25 @@ def get_llm_action(client: OpenAI, observation: dict, task_id: str) -> dict:
             ],
             temperature=TEMPERATURE
         )
-        return json.loads(response.choices[0].message.content)
+        content = response.choices[0].message.content or ""
+        action = _extract_action_json(content)
+        action["task_id"] = task_id
+
+        action_type = str(action.get("action_type", "")).strip().lower()
+        action["action_type"] = action_type
+
+        if action_type in ("classify", "reorder") and action.get("value") is not None:
+            try:
+                action["value"] = int(action["value"])
+            except (ValueError, TypeError):
+                pass
+
+        if not action.get("patient_id"):
+            action["patient_id"] = _pick_first_waiting_patient(observation).get("patient_id", "unknown")
+
+        return action
     except Exception as e:
-        # Safe default action on parsing or API failure
-        p_id = observation["patients"][0]["patient_id"] if observation["patients"] else "unknown"
-        return {"task_id": task_id, "action_type": "classify", "patient_id": p_id, "value": 3}
+        return _fallback_action(observation, task_id)
 
 def run_task(task_id: str, client: OpenAI) -> tuple[float, list[float]]:
     """Runs one complete episode loop against the environment API."""

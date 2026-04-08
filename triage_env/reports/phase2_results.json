@@ -1,0 +1,323 @@
+{
+  "task_1": {
+    "perfect": {
+      "policy": "perfect",
+      "task_id": "task_1",
+      "total_reward": 1.0,
+      "avg_reward": 1.0,
+      "steps": 1,
+      "completed": true,
+      "reward_variance": 0.0,
+      "min_reward": 1.0,
+      "max_reward": 1.0,
+      "rewards": [
+        1.0
+      ]
+    },
+    "random": {
+      "policy": "random",
+      "task_id": "task_1",
+      "total_reward": 0.0,
+      "avg_reward": 0.0,
+      "steps": 1,
+      "completed": true,
+      "reward_variance": 0.0,
+      "min_reward": 0.0,
+      "max_reward": 0.0,
+      "rewards": [
+        0.0
+      ]
+    },
+    "always_low": {
+      "policy": "always_low",
+      "task_id": "task_1",
+      "total_reward": 0.0,
+      "avg_reward": 0.0,
+      "steps": 1,
+      "completed": true,
+      "reward_variance": 0.0,
+      "min_reward": 0.0,
+      "max_reward": 0.0,
+      "rewards": [
+        0.0
+      ]
+    },
+    "always_critical": {
+      "policy": "always_critical",
+      "task_id": "task_1",
+      "total_reward": 1.0,
+      "avg_reward": 1.0,
+      "steps": 1,
+      "completed": true,
+      "reward_variance": 0.0,
+      "min_reward": 1.0,
+      "max_reward": 1.0,
+      "rewards": [
+        1.0
+      ]
+    },
+    "noop": {
+      "policy": "noop",
+      "task_id": "task_1",
+      "total_reward": -5.900000000000003,
+      "avg_reward": -0.19666666666666677,
+      "steps": 30,
+      "completed": false,
+      "reward_variance": 0.0003222222222222222,
+      "min_reward": -0.2,
+      "max_reward": -0.1,
+      "rewards": [
+        -0.1,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2
+      ]
+    }
+  },
+  "task_2": {
+    "perfect": {
+      "policy": "perfect",
+      "task_id": "task_2",
+      "total_reward": -1.7,
+      "avg_reward": -0.15454545454545454,
+      "steps": 11,
+      "completed": true,
+      "reward_variance": 0.18793388429752067,
+      "min_reward": -1.0,
+      "max_reward": 1.0,
+      "rewards": [
+        -0.1,
+        1.0,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -1.0,
+        -0.2
+      ]
+    },
+    "random": {
+      "policy": "random",
+      "task_id": "task_2",
+      "total_reward": -0.5000000000000001,
+      "avg_reward": -0.04545454545454546,
+      "steps": 11,
+      "completed": true,
+      "reward_variance": 0.22793388429752068,
+      "min_reward": -1.0,
+      "max_reward": 1.0,
+      "rewards": [
+        -0.1,
+        -0.1,
+        1.0,
+        -0.1,
+        -0.1,
+        -0.2,
+        -0.1,
+        -0.2,
+        -0.2,
+        -1.0,
+        0.6
+      ]
+    },
+    "always_low": {
+      "policy": "always_low",
+      "task_id": "task_2",
+      "total_reward": -2.8,
+      "avg_reward": -0.2545454545454545,
+      "steps": 11,
+      "completed": true,
+      "reward_variance": 0.05884297520661157,
+      "min_reward": -1.0,
+      "max_reward": 0.0,
+      "rewards": [
+        0.0,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -1.0,
+        -0.2
+      ]
+    },
+    "always_critical": {
+      "policy": "always_critical",
+      "task_id": "task_2",
+      "total_reward": -1.8,
+      "avg_reward": -0.16363636363636364,
+      "steps": 11,
+      "completed": true,
+      "reward_variance": 0.18776859504132232,
+      "min_reward": -1.0,
+      "max_reward": 1.0,
+      "rewards": [
+        1.0,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -1.0,
+        -0.2
+      ]
+    },
+    "noop": {
+      "policy": "noop",
+      "task_id": "task_2",
+      "total_reward": -1.7999999999999998,
+      "avg_reward": -0.2571428571428571,
+      "steps": 7,
+      "completed": true,
+      "reward_variance": 0.03387755102040816,
+      "min_reward": -0.7,
+      "max_reward": -0.1,
+      "rewards": [
+        -0.1,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.7,
+        -0.2
+      ]
+    }
+  },
+  "task_3": {
+    "perfect": {
+      "policy": "perfect",
+      "task_id": "task_3",
+      "total_reward": -0.7,
+      "avg_reward": -0.09999999999999999,
+      "steps": 7,
+      "completed": true,
+      "reward_variance": 0.19999999999999998,
+      "min_reward": -0.7,
+      "max_reward": 0.9,
+      "rewards": [
+        -0.1,
+        0.9,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.7,
+        -0.2
+      ]
+    },
+    "random": {
+      "policy": "random",
+      "task_id": "task_3",
+      "total_reward": -0.09999999999999992,
+      "avg_reward": -0.014285714285714275,
+      "steps": 7,
+      "completed": true,
+      "reward_variance": 0.37265306122448977,
+      "min_reward": -1.0,
+      "max_reward": 0.9,
+      "rewards": [
+        0.9,
+        -0.2,
+        0.8,
+        -0.2,
+        -0.2,
+        -1.0,
+        -0.2
+      ]
+    },
+    "always_low": {
+      "policy": "always_low",
+      "task_id": "task_3",
+      "total_reward": -2.2,
+      "avg_reward": -0.31428571428571433,
+      "steps": 7,
+      "completed": true,
+      "reward_variance": 0.07836734693877553,
+      "min_reward": -1.0,
+      "max_reward": -0.2,
+      "rewards": [
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -1.0,
+        -0.2
+      ]
+    },
+    "always_critical": {
+      "policy": "always_critical",
+      "task_id": "task_3",
+      "total_reward": -2.2,
+      "avg_reward": -0.31428571428571433,
+      "steps": 7,
+      "completed": true,
+      "reward_variance": 0.07836734693877553,
+      "min_reward": -1.0,
+      "max_reward": -0.2,
+      "rewards": [
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -1.0,
+        -0.2
+      ]
+    },
+    "noop": {
+      "policy": "noop",
+      "task_id": "task_3",
+      "total_reward": -2.1,
+      "avg_reward": -0.3,
+      "steps": 7,
+      "completed": true,
+      "reward_variance": 0.08285714285714284,
+      "min_reward": -1.0,
+      "max_reward": -0.1,
+      "rewards": [
+        -0.1,
+        -0.2,
+        -0.2,
+        -0.2,
+        -0.2,
+        -1.0,
+        -0.2
+      ]
+    }
+  }
+}

@@ -2,6 +2,7 @@
 from typing import Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+from typing import Optional
 from app.core.models.action import TriageAction
 from app.core.models.observation import TriageObservation
 from app.core.models.environment import StepResult
@@ -14,10 +15,10 @@ class ResetRequest(BaseModel):
 router = APIRouter()
 
 @router.post("/reset", response_model=TriageObservation)
-async def reset(request: ResetRequest):
+async def reset(request: Optional[ResetRequest] = None):
     """Instantiates a fresh episode scenario and returns the starting state."""
     try:
-        obs = environment.reset(request.task_id)
+        obs = environment.reset(request.task_id if request else None)
         return obs
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

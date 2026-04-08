@@ -50,6 +50,7 @@ class Task3Scenario(BaseScenario):
         is_valid, reason = self.validator.validate(action, self.env_state, self.patient_observations)
         
         reward = 0.0
+        critical_patient_assigned_optimally = False
         step_info = {}
         
         # 3. Handle invalid action
@@ -64,16 +65,25 @@ class Task3Scenario(BaseScenario):
                 success, msg = execute_assignment(action.patient_id, str(action.value), esi, self.env_state)
                 if success:
                     self.assigned_patients.add(action.patient_id)
+                    if action.patient_id in self.env_state.optimal_queue_order:
+                        self.env_state.optimal_queue_order.remove(action.patient_id)
+                    current_obs = self.patient_observations[action.patient_id]
+                    self.patient_observations[action.patient_id] = current_obs.model_copy(
+                        update={"assigned_resource": str(action.value)}
+                    )
                     opt_res = self.patient_hidden_states[action.patient_id].optimal_resource
                     
                     if action.value == opt_res:
                         self.assigned_correctly += 1
                         reward = 0.8
+                        if esi <= 2:
+                            critical_patient_assigned_optimally = True
                     else:
                         self.assigned_incorrectly += 1
-                        reward = 0.4
+                        reward = -0.2
                 else:
                     reward = -0.2
+                    step_info = {"error": msg}
                     
             elif action.action_type == ActionType.REORDER:
                 current_opt = calculate_optimal_queue(self.patient_hidden_states, self.patient_observations, self.env_state.optimal_queue_order)
@@ -117,15 +127,11 @@ class Task3Scenario(BaseScenario):
         discharged = process_step_releases(self.env_state)
 
         # 8.5 Aggregated reward calculation
-        critical_assigned = False
-        if action.action_type == ActionType.ASSIGN and self.patient_hidden_states[action.patient_id].true_esi_level <= 2:
-            critical_assigned = True
-
         reward, breakdown = self.reward_engine.compute_step_reward(
             action_reward=reward,
             env_state=self.env_state,
             deteriorated_this_step=deteriorated_this_step,
-            critical_patient_assigned=critical_assigned
+            critical_patient_assigned=critical_patient_assigned_optimally
         )
         self.env_state.stats.total_reward += reward
 

@@ -62,6 +62,12 @@ class Task2Scenario(BaseScenario):
                 else:
                     self.env_state.stats.incorrect_classifications += 1
                 self.classified_patients.add(action.patient_id)
+                if action.patient_id in self.env_state.optimal_queue_order:
+                    self.env_state.optimal_queue_order.remove(action.patient_id)
+                current_obs = self.patient_observations[action.patient_id]
+                self.patient_observations[action.patient_id] = current_obs.model_copy(
+                    update={"esi_level_assigned": agent_esi}
+                )
                 
             elif action.action_type == ActionType.REORDER:
                 current_opt_queue = calculate_optimal_queue(self.patient_hidden_states, self.patient_observations, self.env_state.optimal_queue_order)

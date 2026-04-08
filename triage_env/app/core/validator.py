@@ -10,6 +10,9 @@ class ActionValidator:
 
     def validate(self, action: TriageAction, env_state: EnvState, patient_observations: dict[str, PatientObservation]) -> tuple[bool, Optional[str]]:
         """Routes the incoming action to the appropriate validation logic based on ActionType."""
+        if action.task_id != env_state.task_id:
+            return False, f"Action task_id {action.task_id} does not match active task {env_state.task_id}."
+
         if action.action_type == ActionType.CLASSIFY:
             return self._validate_classify(action, env_state)
         elif action.action_type == ActionType.REORDER:
@@ -31,7 +34,7 @@ class ActionValidator:
             return False, f"Patient {action.patient_id} not found."
             
         if action.patient_id not in env_state.optimal_queue_order:
-            return False, f"Patient {action.patient_id} is already assigned to a resource."
+            return False, f"Patient {action.patient_id} is not in the waiting queue (already handled)."
             
         from app.environment import environment
         scenario = environment.current_scenario
@@ -70,6 +73,13 @@ class ActionValidator:
             
         if action.patient_id not in env_state.patient_hidden_states:
             return False, f"Patient {action.patient_id} not found."
+
+        # Patients can only be assigned while actively waiting in the queue.
+        if action.patient_id not in env_state.optimal_queue_order:
+            return False, f"Patient {action.patient_id} is not in the waiting queue and cannot be assigned again."
+
+        if action.patient_id in env_state.resource_occupancy.values():
+            return False, f"Patient {action.patient_id} is already assigned to a resource."
             
         if action.value not in ALL_RESOURCE_IDS:
              return False, f"Resource {action.value} for ASSIGN is not valid."
