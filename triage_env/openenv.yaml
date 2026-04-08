@@ -10,6 +10,8 @@ tags:
   - triage
   - resource-allocation
   - medical-ai
+  - openenv
+entrypoint: scripts/launcher.py
 tasks:
   - id: task_1
     name: Single Patient Classification

@@ -86,7 +86,8 @@ def run_task(task_id: str, client: OpenAI) -> tuple[float, list[float]]:
                 
                 result = step_resp.json()
                 obs = result["observation"]
-                reward = result["reward"]
+                reward_data = result["reward"]
+                reward = reward_data["value"] if isinstance(reward_data, dict) else reward_data
                 done = result["done"]
                 breakdown = result.get("info", {}).get("reward_breakdown")
                 

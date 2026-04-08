@@ -20,13 +20,14 @@ class TriageEnvironment:
             "task_3": Task3Scenario
         }
 
-    def reset(self, task_id: str) -> TriageObservation:
-        """Instantiates and initializes a fresh scenario for the specified task ID."""
-        if task_id not in self._scenario_map:
-            raise ValueError(f"Unsupported task_id: {task_id}. Valid: {list(self._scenario_map.keys())}")
+    def reset(self, task_id: Optional[str] = None) -> TriageObservation:
+        """Instantiates and initializes a fresh scenario for the specified task ID. Defaults to 'task_1'."""
+        effective_task_id = task_id or "task_1"
+        if effective_task_id not in self._scenario_map:
+            raise ValueError(f"Unsupported task_id: {effective_task_id}. Valid: {list(self._scenario_map.keys())}")
             
-        self.current_task_id = task_id
-        self.current_scenario = self._scenario_map[task_id]()
+        self.current_task_id = effective_task_id
+        self.current_scenario = self._scenario_map[effective_task_id]()
         obs, _ = self.current_scenario.initialize()
         return obs
 

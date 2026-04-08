@@ -1,7 +1,7 @@
 # triage_env/app/tasks/task_2/scenario.py
 import random
 from app.core.models.action import TriageAction, ActionType
-from app.core.models.environment import EnvState, StepResult
+from app.core.models.environment import EnvState, StepResult, Reward
 from app.core.models.observation import TriageObservation
 from app.core.constants.protocols import TASK_1_SCORING_VALUES
 from app.data.scenario_builder import build_task_2_scenario
@@ -38,7 +38,7 @@ class Task2Scenario(BaseScenario):
         """Process one agent action and manage dynamic queue deterioration."""
         # 1. Check if already done
         if self.env_state.episode_done:
-            return StepResult(observation=self._build_current_observation(), reward=0.0, done=True, info={})
+            return StepResult(observation=self._build_current_observation(), reward=Reward(value=0.0), done=True, info={})
 
         # 2. Validate action
         is_valid, reason = self.validator.validate(action, self.env_state, self.patient_observations)
@@ -128,7 +128,7 @@ class Task2Scenario(BaseScenario):
         
         # 11. Return StepResult
         step_info["reward_breakdown"] = breakdown
-        return StepResult(observation=self._build_current_observation(), reward=reward, done=self.env_state.episode_done, info=step_info)
+        return StepResult(observation=self._build_current_observation(), reward=Reward(value=reward), done=self.env_state.episode_done, info=step_info)
 
     def get_final_score(self) -> tuple[float, dict]:
         """Return combined normalized score for classifications and queue ordering."""

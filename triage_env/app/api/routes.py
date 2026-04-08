@@ -1,4 +1,5 @@
 # triage_env/app/api/routes.py
+from typing import Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from app.core.models.action import TriageAction
@@ -8,7 +9,7 @@ from app.environment import environment
 
 class ResetRequest(BaseModel):
     """Container for the task_id parameter during environment reset operations."""
-    task_id: str
+    task_id: Optional[str] = None
 
 router = APIRouter()
 

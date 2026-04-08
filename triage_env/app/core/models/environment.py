@@ -2,6 +2,7 @@
 from typing import Optional
 from pydantic import BaseModel, Field
 from app.core.models.observation import TriageObservation, MedicalHistory
+from app.core.models.action import TriageAction
 
 class PatientHiddenState(BaseModel):
     """Hidden ground truth for a single patient in the simulation."""
@@ -34,9 +35,17 @@ class EnvState(BaseModel):
     episode_done: bool = False # Termination status
     termination_reason: Optional[str] = None # Human-readable cause of episode end
 
+class Reward(BaseModel):
+    """OpenEnv standard typed reward model."""
+    value: float
+
 class StepResult(BaseModel):
     """OpenEnv standard return object for environment step() calls."""
     observation: TriageObservation # Agent's view of the next state
-    reward: float # Step-specific reward signal
+    reward: Reward # Step-specific reward signal
     done: bool # Episode termination flag
     info: dict = Field(default_factory=dict) # Additional clinical metadata
+
+# OpenEnv Compatibility Aliases (placed centrally for validator discovery)
+Observation = TriageObservation
+Action = TriageAction
