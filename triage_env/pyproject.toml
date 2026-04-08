@@ -1,0 +1,21 @@
+[project]
+name = "clinical-triage-assistant"
+version = "1.0.0"
+description = "Clinical Triage Assistant OpenEnv Environment"
+authors = [
+    {name = "Env Cravers"}
+]
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "openai",
+    "pydantic",
+    "httpx",
+    "python-dotenv"
+]
+
+[tool.setuptools]
+packages = ["app"]
+
+[tool.openenv]
+metadata = "openenv.yaml"

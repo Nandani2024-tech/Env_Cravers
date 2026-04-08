@@ -162,24 +162,12 @@ def log_start(task: str, model: str):
     print(f"[START] task={task} env=clinical-triage model={model}")
 
 def log_step(step: int, action: dict, reward: float, done: bool, breakdown: dict = None, error: Optional[str] = None):
-    """Prints per-step transition log with full clinical context and reward decomposition."""
-    err_str = f" error={error}" if error else ""
-    action_str = f"{action.get('action_type', 'unknown')}(patient={action.get('patient_id', 'null')}, val={action.get('value', 'null')})"
-    
-    # Format reward breakdown if available
-    breakdown_str = ""
-    if breakdown:
-        parts = [f"{k}={v:+.2f}" for k, v in breakdown.items() if v != 0]
-        if parts:
-            breakdown_str = f" breakdown=[{', '.join(parts)}]"
-            
-    print(f"[STEP] step={step} action={action_str} reward={reward:.2f}{breakdown_str} done={str(done).lower()}{err_str}")
+    """Prints per-step transition log in the strictly required OpenEnv format."""
+    print(f"[STEP] step={step} action={json.dumps(action)} reward={reward} done={str(done).lower()}")
 
 def log_end(success: bool, steps: int, score: float, rewards: list[float], details: dict = None):
-    """Prints comprehensive episode results including full grader audit details."""
-    reward_str = ",".join(f"{r:.2f}" for r in rewards)
-    details_str = f" details={json.dumps(details)}" if details else ""
-    print(f"[END] success={str(success).lower()} steps={steps} score={score:.3f} rewards=[{reward_str}]{details_str}")
+    """Prints episode results in the strictly required OpenEnv format."""
+    print(f"[END] success={str(success).lower()} steps={steps} score={score} rewards={rewards}")
 
 def get_llm_action(client: OpenAI, observation: dict, task_id: str) -> dict:
     """Invokes the LLM to decide the next triage action based on current state."""
