@@ -13,7 +13,13 @@ load_dotenv()
 # Environment configuration
 API_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
 MODEL_NAME = os.getenv("MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", os.getenv("HF_TOKEN", ""))
+HF_TOKEN = os.getenv("HF_TOKEN")
+
+# Optional - if you use from_docker_image():
+LOCAL_IMAGE_NAME = os.getenv("LOCAL_IMAGE_NAME")
+
+# Internal configuration
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", HF_TOKEN or "")
 ENV_BASE_URL = os.getenv("ENV_BASE_URL", os.getenv("OPENENV_HOST", "http://localhost:8000"))
 
 TASKS = ["task_1", "task_2", "task_3"]
@@ -264,8 +270,8 @@ def run_task(task_id: str, client: OpenAI) -> tuple[float, list[float]]:
 def main():
     """Sequential execution of all environment benchmark tasks."""
     client = OpenAI(
-        base_url=os.getenv("API_BASE_URL", "https://router.huggingface.co/v1"),
-        api_key=os.getenv("OPENAI_API_KEY", os.getenv("HF_TOKEN", ""))
+        base_url=API_BASE_URL,
+        api_key=OPENAI_API_KEY
     )
     for task_id in TASKS:
         run_task(task_id, client)
