@@ -1,6 +1,7 @@
 from app.environment import environment
 from app.core.constants.resources import ESI_COMPATIBILITY_MATRIX
 from app.core.models.action import ActionType, TriageAction
+from app.core.models.environment import Reward
 
 
 def _find_patient_in_observation(observation, patient_id: str):
@@ -23,7 +24,7 @@ def test_rejects_cross_task_actions():
         )
     )
 
-    assert result.reward == -0.2
+    assert result.reward.value == -0.2
     assert "does not match active task" in result.info.get("error", "")
 
 
@@ -67,7 +68,7 @@ def test_task3_assignment_removes_patient_from_queue_and_marks_resource():
     patient = _find_patient_in_observation(result.observation, patient_id)
     assert patient is not None
     assert patient.assigned_resource == optimal_resource
-    assert result.reward > 0
+    assert result.reward.value > 0
 
 
 def test_task3_invalid_assign_does_not_crash():
@@ -82,7 +83,7 @@ def test_task3_invalid_assign_does_not_crash():
         )
     )
 
-    assert result.reward == -0.2
+    assert result.reward.value == -0.2
     assert "not found" in result.info.get("error", "")
 
 
@@ -124,7 +125,7 @@ def test_task3_correct_assignment_beats_suboptimal_assignment():
         )
     )
 
-    assert correct_result.reward > suboptimal_result.reward
+    assert correct_result.reward.value > suboptimal_result.reward.value
 
 
 def test_task3_prevents_second_assignment_for_same_patient():
@@ -150,8 +151,8 @@ def test_task3_prevents_second_assignment_for_same_patient():
         )
     )
 
-    assert first.reward > 0
-    assert second.reward == -0.2
+    assert first.reward.value > 0
+    assert second.reward.value == -0.2
     assert "cannot be assigned again" in second.info.get("error", "")
 
 
@@ -193,7 +194,7 @@ def test_task3_prevents_reassign_after_discharge():
         )
     )
 
-    assert assigned.reward > 0
-    assert discharged.reward >= -0.3
-    assert reassigned.reward == -0.2
+    assert assigned.reward.value > 0
+    assert discharged.reward.value >= -0.3
+    assert reassigned.reward.value == -0.2
     assert "cannot be assigned again" in reassigned.info.get("error", "")

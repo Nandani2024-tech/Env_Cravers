@@ -65,13 +65,6 @@ class Task1Scenario(BaseScenario):
                     self.env_state.stats.request_info_uses += 1
                     reward = -0.1
 
-        # 6. Check termination
-        if not self.env_state.episode_done:
-            done, term_reason = self.termination_engine.check_termination(self.env_state, self.patient_hidden_states, self.patient_observations)
-            if done:
-                self.env_state.episode_done = True
-                self.env_state.termination_reason = term_reason
-
         # 6.5 Aggregated reward calculation
         reward, breakdown = self.reward_engine.compute_step_reward(
             action_reward=reward,
@@ -84,7 +77,14 @@ class Task1Scenario(BaseScenario):
         # 7. Update state after step
         self.env_state = self.state_registry.update_after_step(self.env_state, self.patient_observations, self.patient_hidden_states, [])
         
-        # 8. Build and return StepResult
+        # 8. Check termination (after state update to use incremented step count)
+        if not self.env_state.episode_done:
+            done, term_reason = self.termination_engine.check_termination(self.env_state, self.patient_hidden_states, self.patient_observations)
+            if done:
+                self.env_state.episode_done = True
+                self.env_state.termination_reason = term_reason
+        
+        # 9. Build and return StepResult
         step_info["reward_breakdown"] = breakdown
         return StepResult(observation=self._build_current_observation(), reward=Reward(value=reward), done=self.env_state.episode_done, info=step_info)
 

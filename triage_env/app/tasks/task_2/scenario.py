@@ -86,7 +86,7 @@ class Task2Scenario(BaseScenario):
                     reward = -0.1
                     
             elif action.action_type == ActionType.DISCHARGE:
-                success, msg = execute_early_discharge(action.patient_id, self.env_state)
+                success, msg = execute_early_discharge(action.patient_id, self.env_state, self.patient_observations)
                 if success:
                     esi = self.patient_hidden_states[action.patient_id].true_esi_level
                     reward = 0.05 if esi in [4, 5] else -0.3
@@ -109,7 +109,7 @@ class Task2Scenario(BaseScenario):
         deteriorated_this_step = self.termination_engine.decrement_deterioration_counters(self.env_state)
         
         # 8. Process auto-releases
-        discharged = process_step_releases(self.env_state)
+        discharged = process_step_releases(self.env_state, self.patient_observations)
 
         # 8.5 Aggregated reward calculation
         reward, breakdown = self.reward_engine.compute_step_reward(
@@ -120,7 +120,10 @@ class Task2Scenario(BaseScenario):
         )
         self.env_state.stats.total_reward += reward
 
-        # 9. Check termination
+        # 9. Update state
+        self.env_state = self.state_registry.update_after_step(self.env_state, self.patient_observations, self.patient_hidden_states, discharged)
+        
+        # 10. Check termination (after state update to use incremented step count)
         if not self.env_state.optimal_queue_order and len(self.classified_patients) == len(self.patient_observations):
             self.env_state.episode_done = True
         else:
@@ -128,9 +131,6 @@ class Task2Scenario(BaseScenario):
             if done:
                 self.env_state.episode_done = True
                 self.env_state.termination_reason = term_reason
-
-        # 10. Update state
-        self.env_state = self.state_registry.update_after_step(self.env_state, self.patient_observations, self.patient_hidden_states, discharged)
         
         # 11. Return StepResult
         step_info["reward_breakdown"] = breakdown

@@ -45,9 +45,11 @@ def increment_wait_steps(env_state: EnvState, patient_observations: dict[str, Pa
 def get_queue_score(agent_queue: list[str], optimal_queue: list[str]) -> float:
     """Calculates a normalized score comparing the agent's queue ordering against the optimal queue.
     Normalization formula: 1.0 - (sum of abs pos differences) / (max possible difference from reverse array).
+    
+    Returns 0.0 if queue is empty to avoid rewarding trivial classification-only strategies.
     """
     if not optimal_queue or not agent_queue:
-        return 1.0
+        return 0.0
 
     total_diff = 0
     for i, pid in enumerate(agent_queue):
