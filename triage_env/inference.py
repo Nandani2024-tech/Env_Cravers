@@ -19,15 +19,25 @@ def log_start(task: str, model: str):
     """Prints episode commencement log in standardized format."""
     print(f"[START] task={task} env=clinical-triage model={model}")
 
-def log_step(step: int, action: str, reward: float, done: bool, error: Optional[str] = None):
-    """Prints per-step transition log in standardized format."""
-    err_str = error if error else "null"
-    print(f"[STEP] step={step} action={action} reward={reward:.2f} done={str(done).lower()} error={err_str}")
+def log_step(step: int, action: dict, reward: float, done: bool, breakdown: dict = None, error: Optional[str] = None):
+    """Prints per-step transition log with full clinical context and reward decomposition."""
+    err_str = f" error={error}" if error else ""
+    action_str = f"{action.get('action_type', 'unknown')}(patient={action.get('patient_id', 'null')}, val={action.get('value', 'null')})"
+    
+    # Format reward breakdown if available
+    breakdown_str = ""
+    if breakdown:
+        parts = [f"{k}={v:+.2f}" for k, v in breakdown.items() if v != 0]
+        if parts:
+            breakdown_str = f" breakdown=[{', '.join(parts)}]"
+            
+    print(f"[STEP] step={step} action={action_str} reward={reward:.2f}{breakdown_str} done={str(done).lower()}{err_str}")
 
-def log_end(success: bool, steps: int, score: float, rewards: list[float]):
-    """Prints episode results log in standardized format."""
+def log_end(success: bool, steps: int, score: float, rewards: list[float], details: dict = None):
+    """Prints comprehensive episode results including full grader audit details."""
     reward_str = ",".join(f"{r:.2f}" for r in rewards)
-    print(f"[END] success={str(success).lower()} steps={steps} score={score:.3f} rewards={reward_str}")
+    details_str = f" details={json.dumps(details)}" if details else ""
+    print(f"[END] success={str(success).lower()} steps={steps} score={score:.3f} rewards=[{reward_str}]{details_str}")
 
 def get_llm_action(client: OpenAI, observation: dict, task_id: str) -> dict:
     """Invokes the LLM to decide the next triage action based on current state."""
@@ -78,9 +88,10 @@ def run_task(task_id: str, client: OpenAI) -> tuple[float, list[float]]:
                 obs = result["observation"]
                 reward = result["reward"]
                 done = result["done"]
+                breakdown = result.get("info", {}).get("reward_breakdown")
                 
                 rewards.append(reward)
-                log_step(step, action["action_type"], reward, done)
+                log_step(step, action, reward, done, breakdown=breakdown)
                 
                 if done:
                     break
@@ -88,12 +99,14 @@ def run_task(task_id: str, client: OpenAI) -> tuple[float, list[float]]:
             # 3. Final score
             score_resp = http_client.get("/score")
             score_resp.raise_for_status()
-            final_score = score_resp.json()["score"]
-            log_end(True, len(rewards), final_score, rewards)
+            score_data = score_resp.json()
+            final_score = score_data["score"]
+            score_details = score_data.get("details")
+            log_end(True, len(rewards), final_score, rewards, details=score_details)
             return final_score, rewards
             
     except Exception as e:
-        log_step(max(1, len(rewards)), "error", 0.0, True, str(e))
+        log_step(max(1, len(rewards)), {"action_type": "error"}, 0.0, True, error=str(e))
         log_end(False, len(rewards), 0.0, rewards)
         return 0.0, rewards
 
