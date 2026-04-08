@@ -14,6 +14,17 @@ class ResetRequest(BaseModel):
 
 router = APIRouter()
 
+@router.get("/")
+async def root():
+    """Root endpoint to verify API health."""
+    return {"status": "success", "message": "Clinical Triage Assistant API is running"}
+
+@router.get("/favicon.ico")
+async def favicon():
+    """Favicon endpoint to avoid 404 logs."""
+    from fastapi.responses import Response
+    return Response(status_code=204)
+
 @router.post("/reset", response_model=TriageObservation)
 async def reset(request: Optional[ResetRequest] = None):
     """Instantiates a fresh episode scenario and returns the starting state."""
