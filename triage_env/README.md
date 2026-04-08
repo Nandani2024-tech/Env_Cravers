@@ -1,3 +1,13 @@
+---
+title: Env Cravers - Clinical Triage Assistant
+emoji: 🏥
+colorFrom: blue
+colorTo: purple
+sdk: docker
+app_port: 7860
+pinned: false
+short_description: AI-powered clinical triage simulation environment
+---
 # Clinical Triage Assistant
 
 An OpenEnv RL environment simulating emergency room triage decisions. Agents learn to classify patient urgency, manage waiting queues, and allocate scarce medical resources optimally based on the 5-level **Emergency Severity Index (ESI)** protocol.
