@@ -1,25 +1,20 @@
 # Env_Cravers: Clinical Triage Assistant
 
-Welcome to the **Env_Cravers** project! This repository contains the complete solution for the Clinical Triage Assistant, divided into two main components:
-
-1. **triage_env (Backend)**: An OpenEnv RL environment simulating emergency room triage decisions powered by LLM agents. It integrates an Algorand premium pipeline for request verification.
-2. **triage-dashboard (Frontend)**: A Next.js 14 debugging dashboard to monitor, verify, and observe the triage operations in real-time.
+Welcome to the **Env_Cravers** project! This repository contains the Clinical Triage Assistant, an OpenEnv-based RL environment for simulating emergency room triage operations.
 
 ## Project Structure
 
 - `/triage_env`: Python-based OpenEnv backend server and RL environment files.
-- `/triage-dashboard`: Next.js frontend user interface for observability.
 
 ## Prerequisites
 
-- **Node.js** (v18+)
 - **Python** (3.11+)
 - **Docker** (optional, for containerized backend)
 - **Algorand TestNet Account** (needed for testing the premium on-chain verification features)
 
 ## Setup Instructions
 
-### 1. Backend (`triage_env`) Setup
+### Backend (`triage_env`) Setup
 
 The backend handles the core logic: processing patient vitals, organizing queues based on the Emergency Severity Index (ESI), and interacting with LLMs.
 
@@ -59,31 +54,13 @@ The backend handles the core logic: processing patient vitals, organizing queues
    # docker run -p 8000:8000 --env-file .env clinical-triage-assistant
    ```
 
-### 2. Frontend (`triage-dashboard`) Setup
-
-The frontend provides a real-time debugging view with an interactive, responsive layout.
-
-1. Navigate to the frontend directory:
-   ```bash
-   cd triage-dashboard
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   # or yarn / pnpm install
-   ```
-
-3. Start the development server:
-   ```bash
-   npm run dev
-   ```
-
-4. Open your browser to [http://localhost:3000](http://localhost:3000).
-
 ## Core Features
 
 - **RL Triage Environment**: A dynamic OpenEnv system testing an agent's ability to allocate resources (beds, trauma bays) and process patients.
 - **Algorand Premium Pipeline**: Demonstrates secure request handling by logging a SHA256 consent hash as a note in an Algorand TestNet transaction before API execution.
 - **AgentGuard Decision Engine**: A deterministic pre-processor ensuring queries are handled appropriately (premium vs. standard) without LLM ambiguity.
-- **Traceability Dashboard**: An engaging Next.js dashboard featuring auto-scrolling logs, "On-chain Verified" badges, and transparent telemetry tracking.
+- **Terminal Logging**: Real-time observability of triage operations, decision logs, and on-chain verification status directly in the terminal.
+
+## Medical Foundation
+
+The environment is built on the **Emergency Severity Index (ESI)**, a five-level emergency department triage algorithm. ESI is a valid, reliable triage tool used worldwide to prioritize patients based on both acuity and resource needs, ensuring that the most critical patients receive care first.
