@@ -1,8 +1,6 @@
-$env:PYTHONPATH = "."
-python scripts/launcher.py 
 
 # Step 0: Reset the environment
-$resetResponse = Invoke-WebRequest `
+$resetResponse = Invoke-WebRequest -UseBasicParsing `
     -Uri "http://localhost:8000/reset" `
     -Method POST `
     -Body '{"task_id":"task_1"}' `
@@ -25,7 +23,7 @@ foreach ($patient in $patients) {
         value = 3
     } | ConvertTo-Json
 
-    $stepResponse = Invoke-WebRequest `
+    $stepResponse = Invoke-WebRequest -UseBasicParsing `
         -Uri "http://localhost:8000/step" `
         -Method POST `
         -Body $stepBody `
@@ -38,7 +36,7 @@ foreach ($patient in $patients) {
 }
 
 # Step 2: Fetch final score with breakdown
-$scoreResponse = Invoke-WebRequest `
+$scoreResponse = Invoke-WebRequest -UseBasicParsing `
     -Uri "http://localhost:8000/score" `
     -Method GET
 

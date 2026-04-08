@@ -42,11 +42,12 @@ class TriageEnvironment:
             return {"error": "Environment not initialized. Call reset() first."}
         return self.current_scenario.get_state()
 
-    def get_final_score(self) -> float:
+    def get_final_score(self) -> dict:
         """Computes the final performance score for the current episode."""
         if self.current_scenario is None:
-            return 0.0
-        return self.current_scenario.get_final_score()
+            return {"score": 0.0, "details": {}}
+        score, details = self.current_scenario.get_final_score()
+        return {"score": score, "details": details}
 
 # Single shared instance for access by API routes
 environment = TriageEnvironment()

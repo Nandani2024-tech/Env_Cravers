@@ -33,6 +33,12 @@ class ActionValidator:
         if action.patient_id not in env_state.optimal_queue_order:
             return False, f"Patient {action.patient_id} is already assigned to a resource."
             
+        from app.environment import environment
+        scenario = environment.current_scenario
+        if hasattr(scenario, "classified_patients"):
+            if action.patient_id in scenario.classified_patients:
+                return False, "Patient already classified"
+                
         return True, None
 
     def _validate_reorder(self, action: TriageAction, env_state: EnvState) -> tuple[bool, Optional[str]]:

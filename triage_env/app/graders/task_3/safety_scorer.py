@@ -15,8 +15,17 @@ def score_safety(env_state: EnvState, total_patients: int) -> float:
     raw = 1.0 - deterioration_penalty - invalid_penalty
     return max(0.0, min(1.0, raw))
 
-def get_task_3_final_score(resource_score: float, time_score: float, safety_score: float) -> float:
+def get_task_3_final_score(resource_score: float, time_score: float, safety_score: float) -> tuple[float, dict]:
     """Assembles all Task 3 subscores into a single weighted performance metric (0.0 to 1.0)."""
     # 40% matching correctness, 30% time management, 30% absolute patient safety
     final = (resource_score * 0.4) + (time_score * 0.3) + (safety_score * 0.3)
-    return max(0.0, min(1.0, final))
+    score = max(0.0, min(1.0, final))
+    
+    details = {
+        "resource_score": resource_score,
+        "time_score": time_score,
+        "safety_score": safety_score,
+        "final_score": score
+    }
+    return score, details
+

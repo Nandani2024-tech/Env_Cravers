@@ -45,7 +45,9 @@ async def health():
 @router.get("/score")
 async def score():
     """Retrieves the performance metrics for the current active episode."""
+    result = environment.get_final_score()
     return {
-        "score": environment.get_final_score(), 
+        "score": result["score"],
+        "details": result.get("details", {}),
         "task_id": environment.current_task_id
     }

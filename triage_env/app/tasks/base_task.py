@@ -35,8 +35,8 @@ class BaseScenario(ABC):
         pass
 
     @abstractmethod
-    def get_final_score(self) -> float:
-        """Return normalized episode score 0.0-1.0."""
+    def get_final_score(self) -> tuple[float, dict]:
+        """Return normalized episode score 0.0-1.0 and details."""
         pass
 
     def _handle_invalid_action(self, reason: str) -> StepResult:
@@ -44,7 +44,20 @@ class BaseScenario(ABC):
         self.env_state.stats.invalid_actions += 1
         self.env_state.stats.total_reward -= 0.2
         obs = self._build_current_observation()
-        return StepResult(observation=obs, reward=-0.2, done=False, info={"error": reason})
+        return StepResult(
+            observation=obs, 
+            reward=-0.2, 
+            done=False, 
+            info={
+                "error": reason,
+                "reward_breakdown": {
+                    "action_reward": 0.0,
+                    "invalid_action_penalty": -0.2,
+                    "deterioration_penalty": 0.0,
+                    "time_bonus": 0.0
+                }
+            }
+        )
 
     def _build_current_observation(self) -> TriageObservation:
         """Constructs the agent-facing observation from current state."""

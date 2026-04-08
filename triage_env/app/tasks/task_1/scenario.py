@@ -73,7 +73,7 @@ class Task1Scenario(BaseScenario):
                 self.env_state.termination_reason = term_reason
 
         # 6.5 Aggregated reward calculation
-        reward = self.reward_engine.compute_step_reward(
+        reward, breakdown = self.reward_engine.compute_step_reward(
             action_reward=reward,
             env_state=self.env_state,
             deteriorated_this_step=[],
@@ -85,9 +85,10 @@ class Task1Scenario(BaseScenario):
         self.env_state = self.state_registry.update_after_step(self.env_state, self.patient_observations, self.patient_hidden_states, [])
         
         # 8. Build and return StepResult
+        step_info["reward_breakdown"] = breakdown
         return StepResult(observation=self._build_current_observation(), reward=reward, done=self.env_state.episode_done, info=step_info)
 
-    def get_final_score(self) -> float:
+    def get_final_score(self) -> tuple[float, dict]:
         """Return normalized episode score 0.0-1.0 based on classification accuracy."""
         return grade_task_1(self.env_state)
 

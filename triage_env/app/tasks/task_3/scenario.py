@@ -121,7 +121,7 @@ class Task3Scenario(BaseScenario):
         if action.action_type == ActionType.ASSIGN and self.patient_hidden_states[action.patient_id].true_esi_level <= 2:
             critical_assigned = True
 
-        reward = self.reward_engine.compute_step_reward(
+        reward, breakdown = self.reward_engine.compute_step_reward(
             action_reward=reward,
             env_state=self.env_state,
             deteriorated_this_step=deteriorated_this_step,
@@ -142,9 +142,10 @@ class Task3Scenario(BaseScenario):
         self.env_state = self.state_registry.update_after_step(self.env_state, self.patient_observations, self.patient_hidden_states, discharged)
         
         # 11. Return StepResult
+        step_info["reward_breakdown"] = breakdown
         return StepResult(observation=self._build_current_observation(), reward=reward, done=self.env_state.episode_done, info=step_info)
 
-    def get_final_score(self) -> float:
+    def get_final_score(self) -> tuple[float, dict]:
         """Return the complex weighted score for resource allocation (Task 3)."""
         res_score = score_resource_assignments(self.assigned_correctly, self.assigned_incorrectly, len(self.patient_observations))
         time_score = score_wait_times(self.patient_hidden_states, self.patient_observations)
