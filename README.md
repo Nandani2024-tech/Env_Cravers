@@ -1,3 +1,14 @@
+---
+title: Env Cravers - Clinical Triage Assistant
+emoji: 🏥
+colorFrom: blue
+colorTo: purple
+sdk: docker
+app_port: 7860
+pinned: false
+short_description: AI-powered clinical triage simulation environment
+---
+
 # Env_Cravers: Clinical Triage Assistant
 
 Welcome to the **Env_Cravers** project! This repository contains the Clinical Triage Assistant, an OpenEnv-based RL environment for simulating emergency room triage operations.
