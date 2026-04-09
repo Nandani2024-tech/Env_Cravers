@@ -257,12 +257,27 @@ def run_task(task_id: str, client: OpenAI) -> tuple[float, list[float]]:
 
 def main():
     """Sequential execution of all environment benchmark tasks."""
-    client = OpenAI(
-        base_url=API_BASE_URL,
-        api_key=OPENAI_API_KEY
-    )
-    for task_id in TASKS:
-        run_task(task_id, client)
+    try:
+        client = OpenAI(
+            base_url=API_BASE_URL,
+            api_key=OPENAI_API_KEY
+        )
+        
+        # Simple health check before tasks
+        print(f"[INFO] Checking environment at {ENV_BASE_URL}...")
+        try:
+            with httpx.Client(timeout=5.0) as check_client:
+                resp = check_client.get(f"{ENV_BASE_URL}/health")
+                print(f"[INFO] Environment health: {resp.status_code}")
+        except Exception as e:
+            print(f"[WARNING] Environment health check failed: {e}. Proceeding anyway...")
+
+        for task_id in TASKS:
+            run_task(task_id, client)
+    except Exception as e:
+        print(f"[ERROR] Fatal unhandled exception in inference.py: {e}")
+        import traceback
+        traceback.print_exc()
 
 if __name__ == "__main__":
     main()

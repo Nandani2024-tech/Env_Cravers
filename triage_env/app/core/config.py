@@ -2,12 +2,12 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
-    # Required: Endpoint for LLM inference (e.g., HuggingFace Router)
-    API_BASE_URL: str
-    # Required: Specific LLM model identifier (e.g., meta-llama/Llama-3-70B)
-    MODEL_NAME: str
-    # Required: Authentication token for Hugging Face Spaces
-    HF_TOKEN: str
+    # Optional: Endpoint for LLM inference (e.g., HuggingFace Router)
+    API_BASE_URL: str = "https://router.huggingface.co/v1"
+    # Optional: Specific LLM model identifier (e.g., meta-llama/Llama-3-70B)
+    MODEL_NAME: str = "Qwen/Qwen2.5-72B-Instruct"
+    # Optional: Authentication token for Hugging Face Spaces
+    HF_TOKEN: str = ""
 
     # Optional: Toggle for verbose environment debugging
     ENV_DEBUG: bool = False
