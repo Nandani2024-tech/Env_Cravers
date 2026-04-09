@@ -24,5 +24,5 @@ def get_task_2_breakdown(env_state: EnvState, patient_hidden_states: dict, patie
         "queue_score": queue_score,
         "speed_score": speed_score,
         "penalty": penalty,
-        "final_score": max(0.0, min(1.0, final_score))
+        "final_score": 0.01 + 0.98 * max(0.0, min(1.0, final_score))
     }

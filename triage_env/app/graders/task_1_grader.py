@@ -18,7 +18,7 @@ def get_task_1_breakdown(env_state: EnvState) -> dict:
         "base_score": base_score,
         "penalty": penalty,
         "info_bonus": info_bonus,
-        "final_score": max(0.0, min(1.0, base_score - penalty + info_bonus)),
+        "final_score": 0.01 + 0.98 * max(0.0, min(1.0, base_score - penalty + info_bonus)),
         "correct": correct,
         "incorrect": incorrect,
         "invalid_actions": env_state.stats.invalid_actions

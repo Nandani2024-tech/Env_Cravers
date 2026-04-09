@@ -19,7 +19,7 @@ def get_task_3_final_score(resource_score: float, time_score: float, safety_scor
     """Assembles all Task 3 subscores into a single weighted performance metric (0.0 to 1.0)."""
     # 40% matching correctness, 30% time management, 30% absolute patient safety
     final = (resource_score * 0.4) + (time_score * 0.3) + (safety_score * 0.3)
-    score = max(0.0, min(1.0, final))
+    score = 0.01 + 0.98 * max(0.0, min(1.0, final))
     
     details = {
         "resource_score": resource_score,

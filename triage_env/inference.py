@@ -22,7 +22,15 @@ LOCAL_IMAGE_NAME = os.getenv("LOCAL_IMAGE_NAME")
 
 # Internal configuration
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", HF_TOKEN or "")
-ENV_BASE_URL = os.getenv("ENV_BASE_URL", os.getenv("OPENENV_HOST", "http://localhost:8000"))
+OPENENV_HOST = os.getenv("OPENENV_HOST", "localhost:8000")
+
+# Ensure ENV_BASE_URL has a scheme
+if os.getenv("ENV_BASE_URL"):
+    ENV_BASE_URL = os.getenv("ENV_BASE_URL")
+elif "://" in OPENENV_HOST:
+    ENV_BASE_URL = OPENENV_HOST
+else:
+    ENV_BASE_URL = f"http://{OPENENV_HOST}"
 
 TASKS = ["task_1", "task_2", "task_3"]
 MAX_STEPS = 30
@@ -59,12 +67,23 @@ def _extract_action_json(raw: str) -> dict[str, Any]:
 def _estimate_esi(patient: dict[str, Any]) -> int:
     """Simple vitals-driven ESI estimate for robust fallback decisions."""
     vitals = patient.get("vitals") or {}
-    spo2 = int(vitals.get("spo2", 95))
-    hr = int(vitals.get("heart_rate", 90))
-    sbp = int(vitals.get("systolic_bp", 110))
-    rr = int(vitals.get("respiratory_rate", 16))
-    gcs = int(vitals.get("gcs", 15))
-    temp = float(vitals.get("temperature", 37.0))
+    
+    def _safe_int(val: Any, default: int) -> int:
+        try:
+            return int(float(val)) if val is not None else default
+        except (ValueError, TypeError):
+            return default
+
+    spo2 = _safe_int(vitals.get("spo2"), 95)
+    hr = _safe_int(vitals.get("heart_rate"), 90)
+    sbp = _safe_int(vitals.get("systolic_bp"), 110)
+    rr = _safe_int(vitals.get("respiratory_rate"), 16)
+    gcs = _safe_int(vitals.get("gcs"), 15)
+    
+    try:
+        temp = float(vitals.get("temperature") or 37.0)
+    except (ValueError, TypeError):
+        temp = 37.0
 
     if spo2 < 70 or gcs <= 8 or sbp < 80:
         return 1
@@ -295,6 +314,7 @@ def main():
         sys.exit(0)
     except Exception as e:
         print(f"[ERROR] Fatal unhandled exception in inference.py: {e}")
+        print(f"[DEBUG] ENV_BASE_URL used: {ENV_BASE_URL}")
         import traceback
         traceback.print_exc()
         sys.exit(1)
