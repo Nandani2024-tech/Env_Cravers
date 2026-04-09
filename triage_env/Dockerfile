@@ -12,7 +12,7 @@ COPY . .
 # Expose the FastAPI port
 EXPOSE 8000
 
-# Ensure .env is loaded if present and Python find the app package
+# Ensure .env is loaded if present and Python finds the app package
 ENV PYTHONPATH=/app
 ENV APP_HOST=0.0.0.0
 ENV APP_PORT=8000
@@ -20,3 +20,7 @@ ENV LOG_LEVEL=INFO
 
 # Start the server
 CMD ["python", "scripts/launcher.py"]
+
+# Healthcheck to verify the FastAPI server is responsive
+HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=3 \
+  CMD python -c "import http.client; c = http.client.HTTPConnection('localhost', 8000); c.request('GET', '/health'); r = c.getresponse(); exit(0 if r.status == 200 else 1)"

@@ -22,7 +22,11 @@ class Settings(BaseSettings):
     # Optional: Maximum seconds to wait for an LLM response
     INFERENCE_TIMEOUT: int = 60
 
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=".env", 
+        env_file_encoding='utf-8', 
+        extra="ignore"
+    )
 
 # Global settings instance for application-wide configuration
 settings = Settings()

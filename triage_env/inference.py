@@ -3,6 +3,8 @@ import os
 import json
 import httpx
 import re
+import sys
+import time
 from openai import OpenAI
 from typing import Any, Optional
 from dotenv import load_dotenv
@@ -258,26 +260,44 @@ def run_task(task_id: str, client: OpenAI) -> tuple[float, list[float]]:
 def main():
     """Sequential execution of all environment benchmark tasks."""
     try:
+        if not OPENAI_API_KEY:
+            print("[ERROR] Credentials missing. Please set OPENAI_API_KEY or HF_TOKEN.")
+            sys.exit(1)
+
         client = OpenAI(
             base_url=API_BASE_URL,
             api_key=OPENAI_API_KEY
         )
         
-        # Simple health check before tasks
-        print(f"[INFO] Checking environment at {ENV_BASE_URL}...")
-        try:
-            with httpx.Client(timeout=5.0) as check_client:
-                resp = check_client.get(f"{ENV_BASE_URL}/health")
-                print(f"[INFO] Environment health: {resp.status_code}")
-        except Exception as e:
-            print(f"[WARNING] Environment health check failed: {e}. Proceeding anyway...")
+        # Robust health check with retries before tasks
+        print(f"[INFO] Connecting to environment at {ENV_BASE_URL}...")
+        max_retries = 10
+        health_ok = False
+        for i in range(max_retries):
+            try:
+                with httpx.Client(timeout=5.0) as check_client:
+                    resp = check_client.get(f"{ENV_BASE_URL}/health")
+                    if resp.status_code == 200:
+                        print(f"[INFO] Environment health: {resp.status_code} (OK)")
+                        health_ok = True
+                        break
+            except Exception as e:
+                print(f"[WARNING] Retry {i+1}/{max_retries}: Environment not ready yet ({e})")
+            time.sleep(3)
+
+        if not health_ok:
+            print("[ERROR] Environment failed to start after multiple retries.")
+            sys.exit(1)
 
         for task_id in TASKS:
             run_task(task_id, client)
+        
+        sys.exit(0)
     except Exception as e:
         print(f"[ERROR] Fatal unhandled exception in inference.py: {e}")
         import traceback
         traceback.print_exc()
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
